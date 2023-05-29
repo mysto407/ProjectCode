@@ -1,0 +1,50 @@
+#include <Particle.h>
+#include "HC_SR04.h"
+
+// Define the ultrasonic sensor object
+HC_SR04 sensor(D2, D4); // Use D2 for Trig pin and D4 for Echo pin
+
+// Define distance threshold for obstacle detection
+int obstacleThreshold = 100; // Adjust this value based on your requirements
+
+// Define Particle cloud function name
+const char* notifyFunction = "notifyPhone";
+
+void setup() {
+  // Initialize serial communication
+  Serial.begin(9600);
+  
+  // Initialize the sensor
+  sensor = HC_SR04(D2, D4);
+  
+  // Register Particle cloud function
+  Particle.function(notifyFunction, notifyPhone);
+}
+
+void loop() {
+  // Read the distance from the ultrasonic sensor
+  double distance = sensor.getDistanceCM();
+
+  // Print the distance to the serial monitor
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.println(" cm");
+  
+  // Check if an obstacle is within the threshold distance
+  if (distance < obstacleThreshold) {
+    // Obstacle detected, trigger notification on the phone
+    notifyPhone("");
+    
+    // Wait for a short duration to avoid continuous notifications
+    delay(2000);
+  }
+
+  delay(100); // Adjust the delay based on your requirements
+}
+
+// Particle cloud function to notify the phone
+int notifyPhone(String command) {
+  // Trigger a notification on your phone through Particle cloud
+  Particle.publish("notify", "Obstacle detected!", PRIVATE);
+  return 0;
+}
